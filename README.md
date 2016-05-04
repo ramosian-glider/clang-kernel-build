@@ -72,3 +72,11 @@ Steps to build the Linux kernel using Clang
 # Known problems
 1. The kernel doesn't boot if configured with CONFIG_KVM (e.g. `make kvmconfig`)
 2. The kernel crashes upon attempting to SSH into the VM.
+
+# Debugging
+	```
+	# Start the VM before running GDB
+	cd $WORLD
+	gdb -x gdb.script
+	(gdb) br dump_stack
+	```
