@@ -71,4 +71,4 @@ Steps to build the Linux kernel using Clang
 
 # Known problems
 1. The kernel doesn't boot if configured with CONFIG_KVM (e.g. `make kvmconfig`)
-2. The kernel hangs somewhere in the login process.
+2. The kernel crashes upon attempting to SSH into the VM.
