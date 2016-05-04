@@ -68,3 +68,7 @@ Steps to build the Linux kernel using Clang
 	# in a separate console:
 	run `ssh -i ssh/id_rsa -p 10023 root@localhost`
 	```
+
+# Known problems
+1. The kernel doesn't boot if configured with CONFIG_KVM (e.g. `make kvmconfig`)
+2. The kernel hangs somewhere in the login process.
