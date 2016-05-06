@@ -71,7 +71,7 @@ Steps to build the Linux kernel using Clang
 
 # Known problems
 1. The kernel doesn't boot if configured with CONFIG_KVM (e.g. `make kvmconfig`)
-2. The kernel crashes upon attempting to SSH into the VM.
+2. The kernel crashes upon attempting to SSH into the VM (see the Frankenbuild instructions below to fix this)
 
 # Debugging
 	```
@@ -80,3 +80,14 @@ Steps to build the Linux kernel using Clang
 	gdb -x gdb.script
 	(gdb) br dump_stack
 	```
+
+
+# Frankenbuild with GCC
+	```
+	# Perform these steps instead of Step 4 above.
+	cd $WORLD/linux-stable
+	make CC=$CLANG_PATH/clang defconfig
+	make CC=`pwd`/../clang_wrapper.py 2>&1 | tee build.log
+	```
+
+`clang_wrapper.py` falls back to GCC for certain files (`kernel/groups.c` for now).
