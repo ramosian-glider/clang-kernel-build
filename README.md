@@ -38,6 +38,7 @@ Steps to build the Linux kernel using Clang
 	tar -jxf kernel-patches.tar.bz2
 	cd linux-stable
 	patch -p1 -i ../clang-flags.patch 
+	patch -p1 -i ../clang-uaccess.patch
 	patch -p1 -i ../patches/boot-workaround-PR18415.patch
 	```
 
@@ -71,9 +72,9 @@ Steps to build the Linux kernel using Clang
 
 # Known problems
 1. The kernel doesn't boot if configured with CONFIG_KVM (e.g. `make kvmconfig`)
-2. The kernel crashes upon attempting to SSH into the VM (see the Frankenbuild instructions below to fix this)
 
 # Debugging
+
 	```
 	# Start the VM before running GDB
 	cd $WORLD
@@ -83,6 +84,7 @@ Steps to build the Linux kernel using Clang
 
 
 # Frankenbuild with GCC
+
 	```
 	# Perform these steps instead of Step 4 above.
 	cd $WORLD/linux-stable
