@@ -67,7 +67,7 @@ Steps to build the Linux kernel using Clang
 	cd $WORLD
 	./run_qemu.sh
 	# in a separate console:
-	run `ssh -i ssh/id_rsa -p 10023 root@localhost`
+	ssh -i ssh/id_rsa -p 10023 root@localhost
 	```
 
 # Known problems
