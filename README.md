@@ -83,7 +83,7 @@ Steps to build the Linux kernel using Clang
 	```
 
 
-# Frankenbuild with GCC
+# Hacking
 
 	```
 	# Perform these steps instead of Step 4 above.
@@ -92,4 +92,4 @@ Steps to build the Linux kernel using Clang
 	make CC=`pwd`/../clang_wrapper.py 2>&1 | tee build.log
 	```
 
-`clang_wrapper.py` falls back to GCC for certain files (`kernel/groups.c` for now).
+The handy `clang_wrapper.py` lets you add arguments to Clang invocation, measure compilation times or fall back to GCC for certain files.
