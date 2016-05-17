@@ -3,6 +3,7 @@ import optparse
 import os
 import subprocess
 import sys
+import time
 
 WORLD_PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -18,12 +19,14 @@ FILTER = {'gcc': ['-Qunused-arguments', '-no-integrated-as', '-mno-global-merge'
 SOURCE = 'source'
 WRAPPER_LOG = WORLD_PATH + '/wrapper.log'
 LOG = sys.stderr
+LOG_OPTIONS = {'time': True, 'argv': True}
 
 def compiler(flags):
   path = 'clang'
+  return path  # no need to use GCC for now
   if SOURCE in flags:
     source = flags[SOURCE]
-    print >>LOG, source
+    #print >>LOG, source
     # kernel/* ok
     # kernel/[st] broken
     # kernel/[kmpstuw] broken
@@ -40,7 +43,7 @@ def compiler(flags):
       pieces = source.split('/')
       if pieces[1][0] in ['g']:
         path = 'gcc'
-    print >>LOG, path
+    #print >>LOG, path
   return path
 
 def filter_args(argv, cname):
@@ -65,13 +68,17 @@ def make_flags(argv):
 
 def main(argv):
   global LOG
-  LOG = file(WRAPPER_LOG, 'a+') 
-  #print >>LOG, ' '.join(argv)
+  LOG = file(WRAPPER_LOG, 'a+')
+  if 'argv' in LOG_OPTIONS:
+    print >>LOG, ' '.join(argv)
   flags, argv = make_flags(argv)
   new_argv = compiler_argv(flags, argv)
   #print >>LOG, ' '.join(new_argv)
+  start_time = time.time()
   ret = subprocess.call(new_argv)
-  #print >>LOG, ret
+  end_time = time.time()
+  if 'time' in LOG_OPTIONS:
+    print >> LOG, 'Time elapsed: {:.3f} seconds'.format(end_time - start_time)
   LOG.close()
   return ret
   
