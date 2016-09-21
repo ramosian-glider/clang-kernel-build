@@ -27,7 +27,7 @@ Steps to build the Linux kernel using Clang
 	cd $WORLD
 	git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 	cd linux-stable
-	git reset --hard v4.6-rc5
+	git reset --hard v4.6.7
 	```
 
 3. Download and apply the patches
@@ -37,7 +37,7 @@ Steps to build the Linux kernel using Clang
 	wget http://buildbot.llvm.linuxfoundation.org/configs/x86_64/kernel-patches.tar.bz2
 	tar -jxf kernel-patches.tar.bz2
 	cd linux-stable
-	patch -p1 -i ../clang-flags.patch 
+	patch -p1 -i ../clang-flags.patch
 	patch -p1 -i ../clang-uaccess.patch
 	patch -p1 -i ../patches/boot-workaround-PR18415.patch
 	```
@@ -72,6 +72,7 @@ Steps to build the Linux kernel using Clang
 
 # Known problems
 1. The kernel doesn't boot if configured with CONFIG_KVM (e.g. `make kvmconfig`)
+2. The kernel crashes in vm_unmap_aliases() if synced to v.4.7 (regressed at 80c4bd7a5e4368b680e0aeb57050a1b06eb573d8)
 
 # Debugging
 
