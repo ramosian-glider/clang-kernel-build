@@ -1,24 +1,24 @@
-commit d50544d24b3427f23cb52a39833b3fb064f270da
+commit 4d9fe06c4e2e2b823a4810543f02015a5364193e
 Author: Alexander Potapenko <glider@google.com>
-Date:   Tue May 3 19:56:24 2016 +0200
+Date:   Wed Sep 21 13:59:43 2016 +0200
 
     DO-NOT-SUBMIT: Clang flags
 
 diff --git a/Makefile b/Makefile
-index 9496df8..68756c1 100644
+index 1a8c8dd..a4b3b09 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -612,7 +612,9 @@ ARCH_AFLAGS :=
+@@ -619,7 +619,9 @@ ARCH_AFLAGS :=
  ARCH_CFLAGS :=
  include arch/$(SRCARCH)/Makefile
  
 +ifneq ($(cc-name),clang)
  KBUILD_CFLAGS	+= $(call cc-option,-fno-delete-null-pointer-checks,)
 +endif
+ KBUILD_CFLAGS	+= $(call cc-disable-warning,maybe-uninitialized,)
  
  ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
- KBUILD_CFLAGS	+= -Os $(call cc-disable-warning,maybe-uninitialized,)
-@@ -695,6 +697,9 @@ KBUILD_CFLAGS += $(call cc-disable-warning, tautological-compare)
+@@ -686,6 +688,9 @@ KBUILD_CFLAGS += $(call cc-disable-warning, tautological-compare)
  # See modpost pattern 2
  KBUILD_CFLAGS += $(call cc-option, -mno-global-merge,)
  KBUILD_CFLAGS += $(call cc-option, -fcatch-undefined-behavior)
@@ -27,9 +27,9 @@ index 9496df8..68756c1 100644
 +KBUILD_AFLAGS += $(call cc-option, -no-integrated-as)
  else
  
- # This warning generated too much noise in a regular build.
+ # These warnings generated too much noise in a regular build.
 diff --git a/arch/x86/Makefile b/arch/x86/Makefile
-index 4086abc..a550988 100644
+index 830ed39..2bc6a77 100644
 --- a/arch/x86/Makefile
 +++ b/arch/x86/Makefile
 @@ -87,11 +87,13 @@ else
@@ -46,17 +46,3 @@ index 4086abc..a550988 100644
  
          # Don't autogenerate traditional x87 instructions
          KBUILD_CFLAGS += $(call cc-option,-mno-80387)
-diff --git a/lib/Makefile b/lib/Makefile
-index 7bd6fd4..26d3a7b 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -73,7 +73,9 @@ obj-$(CONFIG_CHECK_SIGNATURE) += check_signature.o
- obj-$(CONFIG_DEBUG_LOCKING_API_SELFTESTS) += locking-selftest.o
- 
- GCOV_PROFILE_hweight.o := n
-+ifneq ($(cc-name),clang)
- CFLAGS_hweight.o = $(subst $(quote),,$(CONFIG_ARCH_HWEIGHT_CFLAGS))
-+endif
- obj-$(CONFIG_GENERIC_HWEIGHT) += hweight.o
- 
- obj-$(CONFIG_BTREE) += btree.o
