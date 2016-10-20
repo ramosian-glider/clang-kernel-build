@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from collections import defaultdict
 import optparse
 import os
 import subprocess
@@ -53,13 +54,22 @@ def filter_args(argv, cname):
       new_argv.append(arg)
   return new_argv
 
+def msan_argv(flags, argv):
+  source = flags[SOURCE]
+  argv += ['-Wno-address-of-packed-member']
+  if source.endswith('test_kmsan.c'):
+    argv += ['-fsanitize=memory', '-mllvm', '-msan-kernel=1', '-mllvm', '-msan-keep-going=1']
+  return argv
+
 def compiler_argv(flags, argv):
   cname = compiler(flags)
   new_argv = [COMPILER_PATH[cname]] + filter_args(argv, cname)
+  if os.getenv('USE_MSAN'):
+    new_argv = msan_argv(flags, new_argv)
   return new_argv
 
 def make_flags(argv):
-  flags = {}
+  flags = defaultdict(str)
   argv = argv[1:]
   for arg in argv:
     if arg.endswith('.c'):
@@ -81,7 +91,7 @@ def main(argv):
     print >> LOG, 'Time elapsed: {:.3f} seconds'.format(end_time - start_time)
   LOG.close()
   return ret
-  
+
 
 if __name__ == '__main__':
   sys.exit(main(sys.argv))
