@@ -95,3 +95,5 @@ Steps to build the Linux kernel using Clang
 	```
 
 The handy `clang_wrapper.py` lets you add arguments to Clang invocation, measure compilation times or fall back to GCC for certain files.
+
+Also, get yourself a log symbolizer: https://raw.githubusercontent.com/google/sanitizers/master/address-sanitizer/tools/kasan_symbolize.py
