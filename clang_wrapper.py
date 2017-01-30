@@ -10,7 +10,8 @@ WORLD_PATH = os.path.dirname(os.path.abspath(__file__))
 
 COMPILER_PATH = {'gcc': 'gcc',
   #'clang': WORLD_PATH + '/third_party/llvm-build/Release+Asserts/bin/clang'
-  'clang': '/home/glider/src/llvm/llvm_cmake_build/bin/clang',
+  #'clang': '/home/glider/src/llvm/llvm/llvm_cmake_build/bin/clang',
+  'clang': '/usr/local/google/src/llvm/llvm/llvm_cmake_build/bin/clang',
 }
 
 FILTER = {'gcc': ['-Qunused-arguments', '-no-integrated-as', '-mno-global-merge',
@@ -21,10 +22,12 @@ FILTER = {'gcc': ['-Qunused-arguments', '-no-integrated-as', '-mno-global-merge'
 SOURCE = 'source'
 WRAPPER_LOG = WORLD_PATH + '/wrapper.log'
 LOG = sys.stderr
-LOG_OPTIONS = {'time': True, 'argv': True}
+LOG_OPTIONS = {'time': True, 'argv': True, 'kmsan_inst': True}
 
 def compiler(flags):
   path = 'clang'
+  #if SOURCE == 'security/selinux/hooks.c':
+  #  return 'gcc'
   return path  # no need to use GCC for now
   if SOURCE in flags:
     source = flags[SOURCE]
@@ -55,40 +58,101 @@ def filter_args(argv, cname):
       new_argv.append(arg)
   return new_argv
 
+def add_to_list(lst, prefix, files):
+  for f in files:
+    lst.append(prefix + f)
+
 def want_msan_for_file(source):
-  starts = ['lib/r', 'lib/t', 'lib/g']
-  # Whacking the known reports.
-  starts += ['kernel/time/hrtimer.c']
-  starts += ['fs/proc/proc_sysctl.c', 'arch/x86/entry/vdso/vdso32-setup.c']
-  starts += ['fs/proc/']
-  starts += ['block/blk-ioc.c']
-  starts += ['kernel/irq/irqdesc.c']
-  starts += ['kernel/irq/proc.c']
-  starts += ['mm/vmalloc.c']
-  starts += ['kernel/exit.c', 'kernel/kmod.c', 'lib/kobject_uevent.c']
-  starts += ['drivers/base/']
-  ### hangs on boot
-  ### starts += ['kernel/sched']
-  ### starts += ['kernel/sched/fair.c']
-  ### # lib/idr.c initializes memory allocated in fs/proc
-  ### ['arch/x86/mm/ioremap.c', 'lib/idr.c']
-  ### oopsing at boot time
-  ###starts += ['arch/x86/kernel/apic/apic.c']
-  ###starts += ['lib/k']
-  if source.endswith('test_kmsan.c'):
-    return True
-  for i in starts:
-    if source.startswith(i):
+  if source.endswith('.S'):
+    return False
+  # Order of application: exact blacklist > starts_whitelist > starts_blacklist
+  starts_whitelist = []
+  starts_blacklist = []
+  # Only exact filenames, no wildcards here!
+  exact_blacklist = []
+
+  starts_blacklist += ['mm/kmsan/', 'arch/x86/']
+  #starts_blacklist += ['drivers/firmware/efi/']
+  exact_blacklist += ['mm/slab.c', 'mm/slub.c', 'mm/slab_common.c', 'lib/stackdepot.c']
+  # TODO: for debugging KMSAN only
+  # vsprintf.c deadlocks.
+  ###starts_blacklist += ['kernel/printk/printk.c', 'lib/vsprintf.c']
+  exact_blacklist += ['lib/vsprintf.c']
+  # does not link
+  exact_blacklist += ['arch/x86/boot/early_serial_console.c', 'arch/x86/boot/compressed/early_serial_console.c']
+
+  for i in 'bcdefhikmnrstuvw':
+    starts_blacklist.append('mm/' + i)
+  starts_blacklist += ['kernel/']
+
+  mm_black = ['percpu.c', 'pagewalk.c', 'process_vm_access.c', 'percpu-km.c', 'pgtable-generic.c']
+  mm_black += ['percpu-vm.c', 'page_counter.c', 'page_ext.c', 'page_idle.c', 'page_io.c', 'page_isolation.c']
+  mm_black += ['page_owner.c', 'page_poison.c', 'page_alloc.c', 'mempolicy.c']
+  add_to_list(starts_blacklist, 'mm/', mm_black)
+
+  # TODO: printk takes lock, calls memchr() on uninit memory, memchr() reports an uninit and attempts to take the same lock.
+  #starts_blacklist += ['lib/string.c'] # TODO: handle
+  # TODO: lib/vsprintf.c deadlocks when printint reports.
+  exact_blacklist += ['init/main.c']
+
+  starts_whitelist += ['kernel/time/']
+  starts_whitelist += ['kernel/rcu/']
+  starts_whitelist += ['arch/x86/lib/delay.c']
+  starts_whitelist += ['kernel/irq/handle.c', 'kernel/irq/irqdesc.c']
+
+  arch_x86_kernel_white = ['time.c', 'apic/apic.c', 'apic/io_apic.c', 'acpi/boot.c', 'process.c', 'rtc.c', 'irq.c', 'sys_x86_64.c']
+  add_to_list(starts_whitelist, 'arch/x86/kernel/', arch_x86_kernel_white)
+
+  starts_whitelist += ['arch/x86/pci/', 'arch/x86/lib/', 'arch/x86/boot/']
+
+  starts_whitelist += ['arch/x86/mm/ioremap.c', 'arch/x86/mm/pat.c', 'arch/x86/mm/fault.c']
+  starts_whitelist += ['kernel/printk/printk.c']
+
+
+  kernel_sched_white = ['wait.c', 'completion.c', 'idle.c', 'rt.c', 'core.c', 'cputime.c', 'fair.c']
+  add_to_list(starts_whitelist, 'kernel/sched/', kernel_sched_white)
+
+  for i in 'abcdw':
+    starts_whitelist.append('kernel/' + i)
+
+  mm_white = ['backing-dev.c', 'util.c', 'vmalloc.c', 'mmap.c', 'rmap.c', 'interval_tree.c', 'shmem.c', 'readahead.c']
+  mm_white += ['filemap.c', 'swap.c', 'truncate.c', 'page-writeback.c', 'swap_state.c', 'memory.c', 'swapfile.c', 'mlock.c']
+  add_to_list(starts_whitelist, 'mm/', mm_white)
+
+  kernel_locking_white = ['rwsem-spinlock.c', 'rwsem-xadd.c']
+  add_to_list(starts_whitelist, 'kernel/locking/', kernel_locking_white)
+
+  kernel_white = ['softirq.c', 'smpboot.c', 'workqueue.c', 'kthread.c', 'stop_machine.c', 'fork.c', 'exit.c', 'groups.c', 'signal.c']
+  kernel_white += ['audit.c', 'params.c', 'pid.c', 'cred.c', 'user.c', 'nsproxy.c', 'kmod.c', 'smp.c', 'cpu.c']
+  add_to_list(starts_whitelist, 'kernel/', kernel_white)
+  starts_whitelist += ['kernel/trace/', 'kernel/events/']
+
+  for black in exact_blacklist:
+    if source == black:
+      if LOG_OPTIONS['kmsan_inst']:
+        print >>LOG, 'kmsan: exact_blacklist: skipping %s' % source
+      return False
+  for white in starts_whitelist:
+    if source.startswith(white):
+      if LOG_OPTIONS['kmsan_inst']:
+        print >>LOG, 'kmsan: instrumenting %s' % source
       return True
-  return False
+  for black in starts_blacklist:
+    if source.startswith(black):
+      if LOG_OPTIONS['kmsan_inst']:
+        print >>LOG, 'kmsan: starts_blacklist: skipping %s' % source
+      return False
+
+  return bool(source)
 
 
 def msan_argv(flags, argv):
   source = flags[SOURCE]
   argv += ['-Wno-address-of-packed-member']
   if want_msan_for_file(source):
-    argv += ['-fsanitize=memory', '-mllvm', '-msan-kernel=1', '-mllvm', '-msan-keep-going=1']
-  #, '-fsanitize-memory-track-origins=2']
+    argv += ['-fsanitize=kernel-memory', '-mllvm', '-msan-kernel=1', '-mllvm', '-msan-keep-going=1', '-mllvm', '-msan-track-origins=2']
+#    ]
+#    '-fsanitize-memory-track-origins=2']
   return argv
 
 def compiler_argv(flags, argv):
@@ -104,12 +168,14 @@ def make_flags(argv):
   for arg in argv:
     if arg.endswith('.c'):
       flags[SOURCE] = arg
+    if arg.endswith('.S'):
+      flags[SOURCE] = arg
   return flags, argv
 
 def main(argv):
   global LOG
   LOG = file(WRAPPER_LOG, 'a+')
-  if 'argv' in LOG_OPTIONS:
+  if LOG_OPTIONS['argv']:
     print >>LOG, ' '.join(argv)
   flags, argv = make_flags(argv)
   new_argv = compiler_argv(flags, argv)
@@ -117,7 +183,7 @@ def main(argv):
   start_time = time.time()
   ret = subprocess.call(new_argv)
   end_time = time.time()
-  if 'time' in LOG_OPTIONS:
+  if LOG_OPTIONS['time']:
     print >> LOG, 'Time elapsed: {:.3f} seconds'.format(end_time - start_time)
   LOG.close()
   return ret
