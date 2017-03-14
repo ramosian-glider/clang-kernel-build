@@ -34,12 +34,12 @@ Steps to build the Linux kernel using Clang
 
 	```
 	cd $WORLD
-	wget http://buildbot.llvm.linuxfoundation.org/configs/x86_64/kernel-patches.tar.bz2
-	tar -jxf kernel-patches.tar.bz2
 	cd linux-stable
 	patch -p1 -i ../clang-flags.patch
 	patch -p1 -i ../clang-uaccess.patch
-	patch -p1 -i ../patches/boot-workaround-PR18415.patch
+	# boot-workaround-PR18415.patch has been copied here from LLVMLinux buildbot,
+	# which is currently down.
+	patch -p1 -i ../boot-workaround-PR18415.patch
 	patch -p1 -i ../add_container_of_safe.patch
 	patch -p1 -i ../use_container_of_safe.patch
 	```
