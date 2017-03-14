@@ -27,7 +27,7 @@ Steps to build the Linux kernel using Clang
 	cd $WORLD
 	git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 	cd linux-stable
-	git reset --hard v4.8-rc6
+	git reset --hard v4.11-rc2
 	```
 
 3. Download and apply the patches
