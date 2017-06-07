@@ -8,10 +8,9 @@ import time
 
 WORLD_PATH = os.path.dirname(os.path.abspath(__file__))
 
-COMPILER_PATH = {'gcc': 'gcc',
-  #'clang': WORLD_PATH + '/third_party/llvm-build/Release+Asserts/bin/clang'
-  #'clang': '/home/glider/src/llvm/llvm/llvm_cmake_build/bin/clang',
-  'clang': '/usr/local/google/src/llvm/llvm/llvm_cmake_build/bin/clang',
+COMPILER_PATH = {
+  'gcc': 'gcc',
+  'clang': '/'.join([os.getenv('CLANG_PATH'), 'clang'])
 }
 
 FILTER = {'gcc': ['-Qunused-arguments', '-no-integrated-as', '-mno-global-merge',
