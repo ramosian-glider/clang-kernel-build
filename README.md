@@ -27,7 +27,7 @@ Steps to build the Linux kernel using Clang
 	cd $WORLD
 	git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 	cd linux-stable
-	git reset --hard v4.11-rc2
+	git reset --hard v4.12-rc5
 	```
 
 3. Download and apply the patches
@@ -40,8 +40,7 @@ Steps to build the Linux kernel using Clang
 	# boot-workaround-PR18415.patch has been copied here from LLVMLinux buildbot,
 	# which is currently down.
 	patch -p1 -i ../boot-workaround-PR18415.patch
-	patch -p1 -i ../add_container_of_safe.patch
-	patch -p1 -i ../use_container_of_safe.patch
+	patch -p1 -i ../llist.patch
 	```
 
 4. Configure and build the kernel
