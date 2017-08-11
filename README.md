@@ -27,20 +27,16 @@ Steps to build the Linux kernel using Clang
 	cd $WORLD
 	git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 	cd linux-stable
-	git reset --hard v4.12-rc5
+	git reset --hard v4.12-rc7
 	```
 
-3. Download and apply the patches
+3. Apply the patches
 
 	```
 	cd $WORLD
 	cd linux-stable
-	patch -p1 -i ../clang-flags.patch
-	patch -p1 -i ../clang-uaccess.patch
-	# boot-workaround-PR18415.patch has been copied here from LLVMLinux buildbot,
-	# which is currently down.
-	patch -p1 -i ../boot-workaround-PR18415.patch
-	patch -p1 -i ../llist.patch
+	git cherry-pick 96d3599c8477016025e5b20debd1cb82aa06cdae
+	git cherry-pick a92a9808f75f9a81aa67199ffb8b404885e7facf
 	```
 
 4. Configure and build the kernel
@@ -73,6 +69,7 @@ Steps to build the Linux kernel using Clang
 
 # Known problems
 1. The kernel doesn't boot if configured with CONFIG_KVM (e.g. `make kvmconfig`)
+2. Newer kernels (e.g. v. 4.13-rc4) have the necessary patches, but cannot boot :(
 
 # Debugging
 
