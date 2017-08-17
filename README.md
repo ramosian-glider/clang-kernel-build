@@ -37,6 +37,7 @@ Steps to build the Linux kernel using Clang
 	cd linux-stable
 	git cherry-pick 96d3599c8477016025e5b20debd1cb82aa06cdae
 	git cherry-pick a92a9808f75f9a81aa67199ffb8b404885e7facf
+	patch -p1 -i ../clang-uaccess.patch
 	```
 
 4. Configure and build the kernel
