@@ -1,0 +1,58 @@
+commit b80b32b6d5e79798b85cd4644206aaa069059390
+Author: Theodore Ts'o <tytso@mit.edu>
+Date:   Mon Aug 14 08:29:18 2017 -0400
+
+    ext4: fix clang build regression
+    
+    Arnd Bergmann <arnd@arndb.de>
+    
+    As Stefan pointed out, I misremembered what clang can do specifically,
+    and it turns out that the variable-length array at the end of the
+    structure did not work (a flexible array would have worked here
+    but not solved the problem):
+    
+    fs/ext4/mballoc.c:2303:17: error: fields must have a constant size:
+    'variable length array in structure' extension will never be supported
+                    ext4_grpblk_t counters[blocksize_bits + 2];
+    
+    This reverts part of my previous patch, using a fixed-size array
+    again, but keeping the check for the array overflow.
+    
+    Fixes: 2df2c3402fc8 ("ext4: fix warning about stack corruption")
+    Reported-by: Stefan Agner <stefan@agner.ch>
+    Tested-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+    Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+    Signed-off-by: Theodore Ts'o <tytso@mit.edu>
+
+diff --git a/fs/ext4/mballoc.c b/fs/ext4/mballoc.c
+index 5a1052627a81..701085620cd8 100644
+--- a/fs/ext4/mballoc.c
++++ b/fs/ext4/mballoc.c
+@@ -2300,7 +2300,7 @@ static int ext4_mb_seq_groups_show(struct seq_file *seq, void *v)
+ 					     EXT4_MAX_BLOCK_LOG_SIZE);
+ 	struct sg {
+ 		struct ext4_group_info info;
+-		ext4_grpblk_t counters[blocksize_bits + 2];
++		ext4_grpblk_t counters[EXT4_MAX_BLOCK_LOG_SIZE + 2];
+ 	} sg;
+ 
+ 	group--;
+@@ -2309,6 +2309,9 @@ static int ext4_mb_seq_groups_show(struct seq_file *seq, void *v)
+ 			      " 2^0   2^1   2^2   2^3   2^4   2^5   2^6  "
+ 			      " 2^7   2^8   2^9   2^10  2^11  2^12  2^13  ]\n");
+ 
++	i = (blocksize_bits + 2) * sizeof(sg.info.bb_counters[0]) +
++		sizeof(struct ext4_group_info);
++
+ 	grinfo = ext4_get_group_info(sb, group);
+ 	/* Load the group info in memory only if not already loaded. */
+ 	if (unlikely(EXT4_MB_GRP_NEED_INIT(grinfo))) {
+@@ -2320,7 +2323,7 @@ static int ext4_mb_seq_groups_show(struct seq_file *seq, void *v)
+ 		buddy_loaded = 1;
+ 	}
+ 
+-	memcpy(&sg, ext4_get_group_info(sb, group), sizeof(sg));
++	memcpy(&sg, ext4_get_group_info(sb, group), i);
+ 
+ 	if (buddy_loaded)
+ 		ext4_mb_unload_buddy(&e4b);

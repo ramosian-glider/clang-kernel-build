@@ -1,0 +1,51 @@
+From 789388c1fc04e22526a926fcc953bf5ccf5d8672 Mon Sep 17 00:00:00 2001
+From: Alexander Potapenko <glider@google.com>
+Date: Wed, 16 Aug 2017 20:51:22 +0200
+Subject: [PATCH] x86/boot/64: clang: use fixup_pointer() to access
+ next_early_pgt
+
+__startup_64() is normally using fixup_pointer() to access globals in a
+position-independent fashion. However |next_early_pgt| was accessed
+directly, which wasn't guaranteed to work.
+
+Luckily GCC was generating a R_X86_64_PC32 PC-relative relocation for
+|next_early_pgt|, but Clang emitted a R_X86_64_32S, which led to
+accessing invalid memory and rebooting the kernel.
+
+Cc: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Cc: Dmitry Vyukov <dvyukov@google.com>
+Cc: Michael Davidson <md@google.com>
+Fixes: c88d71508e36 ("x86/boot/64: Rewrite startup_64() in C")
+Signed-off-by: Alexander Potapenko <glider@google.com>
+---
+ arch/x86/kernel/head64.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/kernel/head64.c b/arch/x86/kernel/head64.c
+index 46c3c73e7f43..9ba79543d9ee 100644
+--- a/arch/x86/kernel/head64.c
++++ b/arch/x86/kernel/head64.c
+@@ -53,6 +53,7 @@ void __head __startup_64(unsigned long physaddr)
+ 	pudval_t *pud;
+ 	pmdval_t *pmd, pmd_entry;
+ 	int i;
++	unsigned int *next_pgt_ptr;
+ 
+ 	/* Is the address too large? */
+ 	if (physaddr >> MAX_PHYSMEM_BITS)
+@@ -91,9 +92,9 @@ void __head __startup_64(unsigned long physaddr)
+ 	 * creates a bunch of nonsense entries but that is fine --
+ 	 * it avoids problems around wraparound.
+ 	 */
+-
+-	pud = fixup_pointer(early_dynamic_pgts[next_early_pgt++], physaddr);
+-	pmd = fixup_pointer(early_dynamic_pgts[next_early_pgt++], physaddr);
++	next_pgt_ptr = fixup_pointer(&next_early_pgt, physaddr);
++	pud = fixup_pointer(early_dynamic_pgts[(*next_pgt_ptr)++], physaddr);
++	pmd = fixup_pointer(early_dynamic_pgts[(*next_pgt_ptr)++], physaddr);
+ 
+ 	if (IS_ENABLED(CONFIG_X86_5LEVEL)) {
+ 		p4d = fixup_pointer(early_dynamic_pgts[next_early_pgt++], physaddr);
+-- 
+2.14.1.480.gb18f417b89-goog
+
