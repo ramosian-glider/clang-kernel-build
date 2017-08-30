@@ -25,9 +25,12 @@ Steps to build the Linux kernel using Clang
 
 	```
 	cd $WORLD
-	git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+	# Used to be:
+	#  git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+	# , but v4.13-rc7 is still unstable.
+	git clone https://github.com/torvalds/linux.git linux-stable
 	cd linux-stable
-	git reset --hard v4.13-rc5
+	git reset --hard v4.13-rc7
 	```
 
 3. Apply the patches
@@ -35,10 +38,9 @@ Steps to build the Linux kernel using Clang
 	```
 	cd $WORLD
 	cd linux-stable
-	# This patch is in linux-tip already
-	patch -p1 -i ../0001-x86-boot-64-clang-use-fixup_pointer-to-access-next_e.patch
-	# This one is in ext4-dev:
-	patch -p1 -i ../ext4-fix.patch
+	# These two patches are in ToT already:
+	#   patch -p1 -i ../0001-x86-boot-64-clang-use-fixup_pointer-to-access-next_e.patch
+	#   patch -p1 -i ../ext4-fix.patch
 	# There's an ongoing discussion about how this can be done better, see https://lkml.org/lkml/2017/7/28/775
 	patch -p1 -i ../clang-uaccess.patch
 	```
