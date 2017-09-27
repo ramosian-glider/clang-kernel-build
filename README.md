@@ -29,19 +29,10 @@ Steps to build the Linux kernel using Clang
 	cd $WORLD
 	git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 	cd linux-stable
-	git reset --hard v4.13
+	git reset --hard v4.14-rc2
 	```
 
-3. Apply the patches
-
-	```
-	cd $WORLD
-	cd linux-stable
-	# There's an ongoing discussion about how this can be done better, see https://lkml.org/lkml/2017/7/28/775
-	patch -p1 -i ../clang-uaccess.patch
-	```
-
-4. Configure and build the kernel
+3. Configure and build the kernel
 
 	```
 	cd $WORLD
@@ -51,7 +42,7 @@ Steps to build the Linux kernel using Clang
 	make CC=$CLANG_PATH/clang -j64 2>&1 | tee build.log
 	```
 
-5. Set up the VM:
+4. Set up the VM:
 
 	```
 	cd $WORLD
@@ -60,7 +51,7 @@ Steps to build the Linux kernel using Clang
 	sh create_os_image.sh
 	```
 
-6. Run the VM
+5. Run the VM
 
 	```
 	cd $WORLD
@@ -80,7 +71,6 @@ Steps to build the Linux kernel using Clang
 	gdb -x gdb.script
 	(gdb) br dump_stack
 	```
-
 
 # Hacking
 
