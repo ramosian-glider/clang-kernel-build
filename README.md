@@ -61,7 +61,7 @@ Steps to build the Linux kernel using Clang
 	```
 
 # Known problems
-1. The kernel doesn't boot if configured with CONFIG_KVM (e.g. `make kvmconfig`)
+1. The kernel doesn't boot if configured with CONFIG_PARAVIRT (e.g. `make kvmconfig`)
 
 # Debugging
 
