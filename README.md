@@ -60,9 +60,6 @@ Steps to build the Linux kernel using Clang
 	ssh -i ssh/id_rsa -p 10023 root@localhost
 	```
 
-# Known problems
-1. The kernel doesn't boot if configured with CONFIG_PARAVIRT (e.g. `make kvmconfig`)
-
 # Debugging
 
 	```
