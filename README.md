@@ -29,7 +29,7 @@ Steps to build the Linux kernel using Clang
 	cd $WORLD
 	git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 	cd linux-stable
-	git reset --hard v4.14-rc2
+	git reset --hard v5.2-rc4
 	```
 
 3. Configure and build the kernel
